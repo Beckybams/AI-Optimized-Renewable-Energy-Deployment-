@@ -1,0 +1,89 @@
+# AI-Optimized-Renewable-Energy-Deployment
+# Using Synthetic Data
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
+
+# -----------------------------
+# 1. Generate Synthetic Dataset
+# -----------------------------
+np.random.seed(42)
+n_samples = 1000
+
+data = pd.DataFrame({
+    "solar_irradiance": np.random.normal(5.5, 1.2, n_samples),      # kWh/m2/day
+    "wind_speed": np.random.normal(7, 2, n_samples),                 # m/s
+    "population_density": np.random.uniform(100, 5000, n_samples),   # people/km2
+    "energy_demand": np.random.uniform(50, 500, n_samples),          # MW
+    "land_availability": np.random.uniform(10, 1000, n_samples),     # hectares
+    "grid_distance": np.random.uniform(1, 50, n_samples)             # km
+})
+
+# Simulated target: optimal renewable capacity (MW)
+data["optimal_capacity"] = (
+    10 * data["solar_irradiance"] +
+    5 * data["wind_speed"] +
+    0.02 * data["population_density"] +
+    0.5 * data["energy_demand"] +
+    0.01 * data["land_availability"] -
+    0.8 * data["grid_distance"] +
+    np.random.normal(0, 10, n_samples)
+)
+
+# -----------------------------
+# 2. Prepare Features & Target
+# -----------------------------
+X = data.drop("optimal_capacity", axis=1)
+y = data["optimal_capacity"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# -----------------------------
+# 3. Train AI Model
+# -----------------------------
+model = RandomForestRegressor(n_estimators=200, random_state=42)
+model.fit(X_train, y_train)
+
+# -----------------------------
+# 4. Predictions & Evaluation
+# -----------------------------
+y_pred = model.predict(X_test)
+
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("Model Performance:")
+print("Mean Absolute Error:", round(mae, 2))
+print("R² Score:", round(r2, 3))
+
+# -----------------------------
+# 5. Feature Importance
+# -----------------------------
+importance = pd.Series(model.feature_importances_, index=X.columns)
+importance = importance.sort_values(ascending=False)
+
+print("\nFeature Importance:")
+print(importance)
+
+# -----------------------------
+# 6. Visualization
+# -----------------------------
+plt.figure(figsize=(8,5))
+plt.bar(importance.index, importance.values)
+plt.xticks(rotation=45)
+plt.title("Feature Importance in Renewable Deployment Optimization")
+plt.tight_layout()
+plt.show()
+
+# -----------------------------
+# 7. Save Dataset
+# -----------------------------
+data.to_csv("AI_Optimized_Renewable_Energy_Deployment_Data.csv", index=False)
+
+print("\nSynthetic dataset saved successfully.")
